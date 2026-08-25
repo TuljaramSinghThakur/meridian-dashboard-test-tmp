@@ -1,0 +1,454 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-__APPNAME__
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "AKS"
+data:
+  __APPNAME__.json: |
+    {
+      "id": null,
+      "uid": "__APPNAME__-overview",
+      "title": "__DISPLAYNAME__ — Application Overview",
+      "description": "Single pane of glass: HTTP traffic, latency, errors, and pod resources from App Insights (Azure Monitor) + Prometheus + Loki.",
+      "tags": ["__APPNAME__", "azure-monitor", "loki", "prometheus"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "loki_ds",
+            "type": "datasource",
+            "query": "loki",
+            "label": "Loki",
+            "hide": 2,
+            "refresh": 1,
+            "current": { "selected": true, "text": "Loki", "value": "P8E80F9AEF21F6940" }
+          },
+          {
+            "name": "prometheus_ds",
+            "type": "datasource",
+            "query": "prometheus",
+            "label": "Prometheus",
+            "hide": 2,
+            "refresh": 1,
+            "current": { "selected": true, "text": "Prometheus", "value": "prometheus" }
+          },
+          {
+            "name": "azmon_ds",
+            "type": "datasource",
+            "query": "grafana-azure-monitor-datasource",
+            "label": "Azure Monitor",
+            "hide": 2,
+            "refresh": 1,
+            "current": { "selected": true, "text": "Azure Monitor", "value": "P1EB995EACC6832D3" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "HTTP Traffic — App Insights",
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Request Rate (req/min)",
+          "description": "Total HTTP requests per minute — backend (__APPNAME__-backend)",
+          "gridPos": { "x": 0, "y": 1, "w": 8, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqpm",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "requests/count",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Response Time — p50 / p95 / p99 (ms)",
+          "description": "Server-side request duration percentiles",
+          "gridPos": { "x": 8, "y": 1, "w": 8, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "requests/duration",
+                "aggregation": "Average",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Failed Requests",
+          "description": "HTTP 4xx/5xx responses and exceptions — backend",
+          "gridPos": { "x": 16, "y": 1, "w": 8, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "fixedColor": "red", "mode": "fixed" },
+              "custom": { "lineWidth": 2, "fillOpacity": 15 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "requests/failed",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            },
+            {
+              "refId": "B",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "exceptions/count",
+                "aggregation": "Count",
+                "timeGrain": "auto"
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "row",
+          "title": "Frontend — Page Views & JS Exceptions",
+          "gridPos": { "x": 0, "y": 9, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Page Views / min",
+          "description": "Browser page views tracked by App Insights JS SDK (__APPNAME__-frontend)",
+          "gridPos": { "x": 0, "y": 10, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "pageViews/count",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-frontend"] }]
+              }
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Browser Exceptions",
+          "description": "Unhandled JS exceptions from the React SPA",
+          "gridPos": { "x": 12, "y": 10, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "fixedColor": "orange", "mode": "fixed" },
+              "custom": { "lineWidth": 2, "fillOpacity": 15 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "exceptions/browser",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-frontend"] }]
+              }
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "row",
+          "title": "Pod Resources — Prometheus",
+          "gridPos": { "x": 0, "y": 18, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "CPU Usage (millicores)",
+          "description": "Container CPU usage — backend and frontend pods",
+          "gridPos": { "x": 0, "y": 19, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "${prometheus_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"__APPNAME__\", container!=\"\", container!=\"POD\"}[5m])) by (pod) * 1000",
+              "legendFormat": "{{pod}}",
+              "datasource": { "type": "prometheus", "uid": "${prometheus_ds}" }
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Memory Usage (MiB)",
+          "description": "Container working set memory — backend and frontend pods",
+          "gridPos": { "x": 12, "y": 19, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "${prometheus_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "mebibytes",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"__APPNAME__\", container!=\"\", container!=\"POD\"}) by (pod) / 1024 / 1024",
+              "legendFormat": "{{pod}}",
+              "datasource": { "type": "prometheus", "uid": "${prometheus_ds}" }
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "type": "row",
+          "title": "Live Logs — Loki",
+          "gridPos": { "x": 0, "y": 27, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 12,
+          "type": "logs",
+          "title": "Backend Logs",
+          "description": "Live structured logs from __APPNAME__-backend pods",
+          "gridPos": { "x": 0, "y": 28, "w": 12, "h": 10 },
+          "datasource": { "type": "loki", "uid": "${loki_ds}" },
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showTime": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "{namespace=\"__APPNAME__\", app=\"__APPNAME__-backend\"}",
+              "datasource": { "type": "loki", "uid": "${loki_ds}" }
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "type": "logs",
+          "title": "Frontend Logs",
+          "description": "Live logs from __APPNAME__-frontend (nginx) pods",
+          "gridPos": { "x": 12, "y": 28, "w": 12, "h": 10 },
+          "datasource": { "type": "loki", "uid": "${loki_ds}" },
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": false,
+            "showTime": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "{namespace=\"__APPNAME__\", app=\"__APPNAME__-frontend\"}",
+              "datasource": { "type": "loki", "uid": "${loki_ds}" }
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "type": "row",
+          "title": "Dependency Health — App Insights",
+          "gridPos": { "x": 0, "y": 38, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 15,
+          "type": "timeseries",
+          "title": "Dependency Calls (DB, HTTP) — rate & failures",
+          "description": "Outbound dependency calls from backend: PostgreSQL, Azure Blob, external HTTP",
+          "gridPos": { "x": 0, "y": 39, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "dependencies/count",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            },
+            {
+              "refId": "B",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "dependencies/failed",
+                "aggregation": "Count",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "type": "timeseries",
+          "title": "Dependency Duration (avg ms)",
+          "description": "Average outbound call duration — PostgreSQL, Blob, HTTP",
+          "gridPos": { "x": 12, "y": 39, "w": 12, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Monitor",
+              "azureMonitor": {
+                "resourceGroup": "rg-appframework-dev",
+                "resourceName": "appi-aks-tools-dev",
+                "metricNamespace": "microsoft.insights/components",
+                "metricName": "dependencies/duration",
+                "aggregation": "Average",
+                "timeGrain": "auto",
+                "dimensionFilters": [{ "dimension": "cloud/roleName", "operator": "eq", "filters": ["__APPNAME__-backend"] }]
+              }
+            }
+          ]
+        }
+      ]
+    }
