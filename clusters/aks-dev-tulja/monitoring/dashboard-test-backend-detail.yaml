@@ -1,0 +1,326 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-test-backend-detail
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "AKS"
+data:
+  test-backend-detail.json: |
+    {
+      "id": null,
+      "uid": "test-backend-detail",
+      "title": "Test Backend — Request & Error Detail",
+      "description": "KQL drill-down: per-endpoint request performance, failed request details, exception messages, dependency breakdown, and frontend page activity from Log Analytics.",
+      "tags": ["test-backend", "azure-monitor", "kql"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "1m",
+      "time": { "from": "now-3h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "azmon_ds",
+            "type": "datasource",
+            "query": "grafana-azure-monitor-datasource",
+            "label": "Azure Monitor",
+            "hide": 2,
+            "refresh": 1,
+            "current": { "selected": true, "text": "Azure Monitor", "value": "P1EB995EACC6832D3" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Request Details — per Endpoint",
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "type": "table",
+          "title": "Top Endpoints — Volume, Latency & Failure Rate",
+          "description": "All operations in the selected time window: request count, average & p95 duration, failure rate %.",
+          "gridPos": { "x": 0, "y": 1, "w": 24, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "sortBy": [{ "displayName": "Requests", "desc": true }],
+            "footer": { "show": false }
+          },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "left" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Requests"    }, "properties": [{ "id": "unit", "value": "short" }, { "id": "custom.width", "value": 90 }] },
+              { "matcher": { "id": "byName", "options": "AvgMs"       }, "properties": [{ "id": "unit", "value": "ms"    }, { "id": "custom.width", "value": 90 }] },
+              { "matcher": { "id": "byName", "options": "P95Ms"       }, "properties": [{ "id": "unit", "value": "ms"    }, { "id": "custom.width", "value": 90 }] },
+              { "matcher": { "id": "byName", "options": "FailRate"    }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "custom.width", "value": 90 },
+                { "id": "thresholds", "value": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}] } },
+                { "id": "custom.displayMode", "value": "color-background" }
+              ]}
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Requests=count(), AvgMs=round(avg(DurationMs),1), P95Ms=round(percentile(DurationMs,95),1), FailRate=round(100.0*countif(Success==false)/count(),1) by Endpoint=Name | order by Requests desc | take 30",
+                "resultFormat": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Avg Response Time by Endpoint (ms)",
+          "description": "Average server-side duration over time, one series per operation name.",
+          "gridPos": { "x": 0, "y": 11, "w": 24, "h": 8 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "right", "calcs": ["mean", "max"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 6 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize AvgMs=avg(DurationMs) by bin(TimeGenerated, $__interval), Endpoint=Name",
+                "resultFormat": "time_series"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "row",
+          "title": "Failures & Exceptions",
+          "gridPos": { "x": 0, "y": 19, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 5,
+          "type": "table",
+          "title": "Failed Requests — Endpoint × Status Code",
+          "description": "HTTP requests where success == false, grouped by endpoint and result code.",
+          "gridPos": { "x": 0, "y": 20, "w": 12, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "sortBy": [{ "displayName": "Count", "desc": true }],
+            "footer": { "show": false }
+          },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "left" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Count"      }, "properties": [{ "id": "custom.width", "value": 70 }] },
+              { "matcher": { "id": "byName", "options": "StatusCode" }, "properties": [{ "id": "custom.width", "value": 90 },
+                { "id": "thresholds", "value": { "mode": "absolute", "steps": [{"color":"green","value":null},{"color":"yellow","value":400},{"color":"red","value":500}] } },
+                { "id": "custom.displayMode", "value": "color-background" }
+              ]}
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | where Success == false | summarize Count=count(), LastSeen=format_datetime(max(TimeGenerated),'yyyy-MM-dd HH:mm') by Endpoint=Name, StatusCode=tostring(ResultCode) | order by Count desc | take 30",
+                "resultFormat": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "table",
+          "title": "Exception Summary — Type & Message",
+          "description": "Unhandled exceptions captured by the OTel SDK, grouped by type and outer message.",
+          "gridPos": { "x": 12, "y": 20, "w": 12, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "sortBy": [{ "displayName": "Count", "desc": true }],
+            "footer": { "show": false }
+          },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "left" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Count"    }, "properties": [{ "id": "custom.width", "value": 70 }] },
+              { "matcher": { "id": "byName", "options": "LastSeen" }, "properties": [{ "id": "custom.width", "value": 130 }] }
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppExceptions | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Count=count(), LastSeen=format_datetime(max(TimeGenerated),'yyyy-MM-dd HH:mm') by ExceptionType=ExceptionType, Message=substring(OuterMessage,0,120) | order by Count desc | take 30",
+                "resultFormat": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "row",
+          "title": "Dependency Calls — Database & HTTP",
+          "gridPos": { "x": 0, "y": 30, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 8,
+          "type": "table",
+          "title": "Dependency Breakdown — Target, Type, Latency & Success",
+          "description": "Outbound calls (PostgreSQL, Azure Blob, HTTP) grouped by target and type.",
+          "gridPos": { "x": 0, "y": 31, "w": 14, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "sortBy": [{ "displayName": "Calls", "desc": true }],
+            "footer": { "show": false }
+          },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "left" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Calls"      }, "properties": [{ "id": "custom.width", "value": 70 }] },
+              { "matcher": { "id": "byName", "options": "AvgMs"      }, "properties": [{ "id": "unit", "value": "ms" }, { "id": "custom.width", "value": 80 }] },
+              { "matcher": { "id": "byName", "options": "SuccessPct" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "custom.width", "value": 90 },
+                { "id": "thresholds", "value": { "mode": "absolute", "steps": [{"color":"red","value":null},{"color":"yellow","value":95},{"color":"green","value":99}] } },
+                { "id": "custom.displayMode", "value": "color-background" }
+              ]}
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppDependencies | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Calls=count(), AvgMs=round(avg(DurationMs),1), SuccessPct=round(100.0*countif(Success==true)/count(),1) by Target=Target, Type=DependencyType | order by Calls desc | take 30",
+                "resultFormat": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "Dependency Avg Duration by Target (ms)",
+          "description": "Average outbound call latency over time per dependency target.",
+          "gridPos": { "x": 14, "y": 31, "w": 10, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "multi" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 6 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppDependencies | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize AvgMs=avg(DurationMs) by bin(TimeGenerated, $__interval), Target=Target",
+                "resultFormat": "time_series"
+              }
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "Frontend — Page Activity",
+          "gridPos": { "x": 0, "y": 41, "w": 24, "h": 1 },
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "type": "table",
+          "title": "Page Views by Route",
+          "description": "Browser page views tracked by App Insights JS SDK, grouped by SPA route.",
+          "gridPos": { "x": 0, "y": 42, "w": 12, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "sortBy": [{ "displayName": "Views", "desc": true }],
+            "footer": { "show": false }
+          },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "left" } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Views"     }, "properties": [{ "id": "custom.width", "value": 70 }] },
+              { "matcher": { "id": "byName", "options": "AvgLoadMs" }, "properties": [{ "id": "unit", "value": "ms" }, { "id": "custom.width", "value": 90 }] }
+            ]
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppPageViews | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-frontend' | summarize Views=count(), AvgLoadMs=round(avg(DurationMs),1) by Page=Name | order by Views desc | take 30",
+                "resultFormat": "table"
+              }
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "Page Load Time over Time (ms)",
+          "description": "Average browser page load time from the JS SDK. Spikes indicate slow resource loading.",
+          "gridPos": { "x": 12, "y": 42, "w": 12, "h": 10 },
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "${azmon_ds}" },
+          "options": {
+            "tooltip": { "mode": "single" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "color": { "fixedColor": "blue", "mode": "fixed" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "queryType": "Azure Log Analytics",
+              "azureLogAnalytics": {
+                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
+                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "query": "AppPageViews | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-frontend' | summarize AvgLoadMs=avg(DurationMs) by bin(TimeGenerated, $__interval)",
+                "resultFormat": "time_series"
+              }
+            }
+          ]
+        }
+      ]
+    }
