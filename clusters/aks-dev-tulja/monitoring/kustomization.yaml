@@ -3,3 +3,5 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - dashboard-test-backend.yaml
+  - dashboard-test-backend-detail.yaml
