@@ -29,7 +29,7 @@ data:
             "label": "Azure Monitor",
             "hide": 2,
             "refresh": 1,
-            "current": { "selected": true, "text": "Azure Monitor", "value": "P1EB995EACC6832D3" }
+            "current": { "selected": true, "text": "default", "value": "" }
           }
         ]
       },
@@ -69,8 +69,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Requests=count(), AvgMs=round(avg(DurationMs),1), P95Ms=round(percentile(DurationMs,95),1), FailRate=round(100.0*countif(Success==false)/count(),1) by Endpoint=Name | order by Requests desc | take 30",
                 "resultFormat": "table"
               }
@@ -100,8 +100,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize AvgMs=avg(DurationMs) by bin(TimeGenerated, $__interval), Endpoint=Name",
                 "resultFormat": "time_series"
               }
@@ -141,8 +141,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppRequests | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | where Success == false | summarize Count=count(), LastSeen=format_datetime(max(TimeGenerated),'yyyy-MM-dd HH:mm') by Endpoint=Name, StatusCode=tostring(ResultCode) | order by Count desc | take 30",
                 "resultFormat": "table"
               }
@@ -172,8 +172,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppExceptions | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Count=count(), LastSeen=format_datetime(max(TimeGenerated),'yyyy-MM-dd HH:mm') by ExceptionType=ExceptionType, Message=substring(OuterMessage,0,120) | order by Count desc | take 30",
                 "resultFormat": "table"
               }
@@ -214,8 +214,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppDependencies | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize Calls=count(), AvgMs=round(avg(DurationMs),1), SuccessPct=round(100.0*countif(Success==true)/count(),1) by Target=Target, Type=DependencyType | order by Calls desc | take 30",
                 "resultFormat": "table"
               }
@@ -245,8 +245,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppDependencies | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-backend' | summarize AvgMs=avg(DurationMs) by bin(TimeGenerated, $__interval), Target=Target",
                 "resultFormat": "time_series"
               }
@@ -283,8 +283,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppPageViews | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-frontend' | summarize Views=count(), AvgLoadMs=round(avg(DurationMs),1) by Page=Name | order by Views desc | take 30",
                 "resultFormat": "table"
               }
@@ -314,8 +314,8 @@ data:
               "refId": "A",
               "queryType": "Azure Log Analytics",
               "azureLogAnalytics": {
-                "workspace": "/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev",
-                "resources": ["/subscriptions/287f1da6-5d7e-4154-af6f-8d62b493d9cd/resourceGroups/rg-appframework-dev/providers/Microsoft.OperationalInsights/workspaces/law-shared-dev"],
+                "workspace": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test",
+                "resources": ["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-promoted-test/providers/Microsoft.OperationalInsights/workspaces/law-promoted-test"],
                 "query": "AppPageViews | where $__timeFilter(TimeGenerated) | where AppRoleName == 'test-backend-frontend' | summarize AvgLoadMs=avg(DurationMs) by bin(TimeGenerated, $__interval)",
                 "resultFormat": "time_series"
               }
